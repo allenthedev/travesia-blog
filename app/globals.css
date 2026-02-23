@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", serif; /* 영국적인 세리프 폰트 느낌 */
+  --font-sans: "Inter", sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #111111;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
