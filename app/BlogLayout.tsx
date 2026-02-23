@@ -86,8 +86,8 @@ export default function BlogLayout({ articles, isCategoryPage = false, categoryN
         <aside className={`fixed left-0 top-0 h-full w-16 flex flex-col items-center py-8 z-40 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           forceScrolledLayout ? '-translate-x-full' : 'translate-x-0'
         } bg-[#FCFBF9] border-r border-gray-200/60`}>
-          <Link href="/" className="w-8 h-8 bg-black rounded-sm flex items-center justify-center text-white font-serif text-xs mb-10 cursor-pointer">
-            T
+          <Link href="/" className="relative w-8 h-8 mb-10 cursor-pointer rounded-sm overflow-hidden">
+          <img src="/logo.png" alt="TRAVESIA Logo" className="w-full h-full object-cover" />
           </Link>
           
           <AnimatePresence>
@@ -233,15 +233,15 @@ export default function BlogLayout({ articles, isCategoryPage = false, categoryN
           {currentArticles.map((article) => (
              <Link href={`/article/${article.id}`} key={article.id} className="group cursor-pointer block">
                <article>
-                 <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F4F0] mb-6 rounded-sm">
-                 <Image
-  src={article.thumbnail}
-  alt={article.title}
-  fill // 부모 div의 꽉 찬 크기에 맞춤
-  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-  className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-/>
-                   <div className="absolute top-4 left-4">
+               <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F4F0] mb-6 rounded-sm">
+  <Image
+    src={article.thumbnail}
+    alt={article.title}
+    fill
+    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+    className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+  />
+  <div className="absolute top-4 left-4">
                      <span className="bg-[#FCFBF9]/90 backdrop-blur-sm px-2 py-1 text-[10px] tracking-widest uppercase font-medium rounded-sm shadow-sm">
                        {article.category}
                      </span>
