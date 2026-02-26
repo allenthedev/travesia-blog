@@ -10,6 +10,12 @@ async function getArticles() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      filter: {
+        property: 'Published', 
+        checkbox: {
+          equals: true
+        }
+      },
       sorts: [{ property: '작성일', direction: 'descending' }],
     }),
     cache: 'no-store'
