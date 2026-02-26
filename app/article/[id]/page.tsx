@@ -101,9 +101,46 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
             return <h3 key={block.id} className="text-xl font-serif text-black mt-8 mb-4">{text}</h3>;
           }
           
+          // 1. 이미지 에러 방어막 추가
           if (type === 'image') {
-            const url = block.image.type === 'external' ? block.image.external.url : block.image.file.url;
+            const url = block.image.type === 'external' ? block.image.external?.url : block.image.file?.url;
+            
+            // 💡 url이 비어있다면 에러를 내지 말고 조용히 넘어가기!
+            if (!url) return null; 
+
             return <img key={block.id} src={url} alt="content image" className="w-full my-12 rounded-sm" />;
+          }
+
+          // 2. 구글 맵 (임베드, 북마크, 링크 미리보기 모두 커버)
+          if (type === 'embed' || type === 'bookmark' || type === 'link_preview') {
+            const blockData = block[type];
+            const url = blockData?.url;
+
+            if (!url) return null;
+            
+            // 💡 주소에 'google'과 'map'이 둘 다 있으면 무조건 지도로 렌더링
+            if (url.includes('google') && url.includes('map')) {
+              return (
+                <div key={block.id} className="w-full aspect-video my-12 rounded-sm overflow-hidden shadow-sm border border-gray-200/60">
+                  <iframe 
+                    src={url} 
+                    width="100%" 
+                    height="100%" 
+                    style={{ border: 0 }} 
+                    allowFullScreen 
+                    loading="lazy" 
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              );
+            }
+            
+            // 지도가 아닌 일반 링크일 경우
+            return (
+              <a key={block.id} href={url} target="_blank" rel="noopener noreferrer" className="block my-6 p-4 border border-gray-200 hover:bg-gray-50 transition-colors text-sm text-gray-600 break-all rounded-sm">
+                🔗 {url}
+              </a>
+            );
           }
 
           return null; 
