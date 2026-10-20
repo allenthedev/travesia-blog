@@ -1,52 +1,16 @@
-import ArticleHeader from "./ArticleHeader"; // 방금 만든 멋진 헤더 부품을 불러옵니다.
-
-async function getArticleBlocks(blockId: string) {
-  const res = await fetch(`https://api.notion.com/v1/blocks/${blockId}/children?page_size=100`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
-      'Notion-Version': '2022-06-28',
-    },
-    cache: 'no-store'
-  });
-
-  const data = await res.json();
-  if (!res.ok) return [];
-  return data.results;
-}
-
-async function getArticleDetails(pageId: string) {
-  const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
-      'Notion-Version': '2022-06-28',
-    },
-    cache: 'no-store'
-  });
-
-  const data = await res.json();
-  if (!res.ok) return null;
-  
-  const props = data.properties;
-  return {
-    title: props['제목']?.title[0]?.plain_text || '제목 없음',
-    category: props['카테고리']?.select?.name || 'Uncategorized',
-    date: props['작성일']?.date?.start || '',
-    thumbnail: props['썸네일']?.files[0]?.file?.url || props['썸네일']?.files[0]?.external?.url || '',
-  };
-}
+import { notFound } from "next/navigation";
+import ArticleHeader from "./ArticleHeader";
+import { getPublishedArticle, getAllBlocks } from "@/lib/notion";
 
 export default async function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const pageId = resolvedParams.id;
 
-  const [details, blocks] = await Promise.all([
-    getArticleDetails(pageId),
-    getArticleBlocks(pageId)
-  ]);
+  // 공개 여부를 먼저 확인한 뒤 본문을 가져옵니다. (초안은 본문 요청 자체를 하지 않음)
+  const details = await getPublishedArticle(pageId);
+  if (!details) notFound();
 
-  if (!details) return <div className="p-20 text-center">글을 불러올 수 없습니다.</div>;
+  const blocks = await getAllBlocks(pageId);
 
   return (
     <div className="min-h-screen bg-[#FCFBF9] text-gray-900 font-sans pb-32">

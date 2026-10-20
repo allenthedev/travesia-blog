@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image"; // 파일 맨 위쪽 import 모여있는 곳에 추가
 
+import type { Article } from "@/lib/notion";
+
 interface BlogLayoutProps {
-  articles: any[];
+  articles: Article[];
   isCategoryPage?: boolean;
   categoryName?: string;
 }
@@ -234,13 +236,16 @@ export default function BlogLayout({ articles, isCategoryPage = false, categoryN
              <Link href={`/article/${article.id}`} key={article.id} className="group cursor-pointer block">
                <article>
                <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F4F0] mb-6 rounded-sm">
-  <Image
-    src={article.thumbnail}
-    alt={article.title}
-    fill
-    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-    className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-  />
+  {/* 썸네일이 없는 글은 배경색 박스만 보여줍니다 */}
+  {article.thumbnail && (
+    <Image
+      src={article.thumbnail}
+      alt={article.title}
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+    />
+  )}
   <div className="absolute top-4 left-4">
                      <span className="bg-[#FCFBF9]/90 backdrop-blur-sm px-2 py-1 text-[10px] tracking-widest uppercase font-medium rounded-sm shadow-sm">
                        {article.category}
@@ -307,8 +312,6 @@ export default function BlogLayout({ articles, isCategoryPage = false, categoryN
         <footer className="w-full max-w-7xl border-t border-gray-200/60 mt-24 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-gray-400 font-sans uppercase tracking-widest">
           <p>© {new Date().getFullYear()} TRAVESIA. All rights reserved.</p>
           <div className="flex gap-8">
-            {/* 이메일 주소는 본인 이메일로 수정하세요! */}
-            <a href="mailto:your@email.com" className="hover:text-black transition-colors">Contact</a>
             <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors">Instagram</a>
           </div>
         </footer>

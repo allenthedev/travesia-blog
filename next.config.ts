@@ -1,17 +1,11 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "www.notion.so" },
-      { protocol: "https", hostname: "images.unsplash.com" }, // 노션 기본 커버 이미지용
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-      { protocol: "https", hostname: "s3.us-west-2.amazonaws.com" },
-      { protocol: "https", hostname: "prod-files-secure.s3.us-west-2.amazonaws.com" }, // 노션 업로드 이미지용
-    ],
-  },
-};
+   /** @type {import('next').NextConfig} */
+   const nextConfig = {
+     images: {
+       remotePatterns: [
+         // 노션 업로드 이미지, 알라딘 책 표지 등 모든 https 이미지 허용
+         { protocol: "https", hostname: "**" },
+       ],
+     },
+   };
 
-export default nextConfig;
+   export default nextConfig;
