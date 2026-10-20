@@ -1,17 +1,143 @@
 @import "tailwindcss";
 
+/* 기본 글꼴: 애플 기기는 시스템 글꼴(SF/Apple SD 산돌고딕), 그 외에는 Noto Sans KR */
 @theme {
-  --font-serif: "Playfair Display", serif; /* 영국적인 세리프 폰트 느낌 */
-  --font-sans: "Inter", sans-serif;
-}
-
-:root {
-  --background: #ffffff;
-  --foreground: #111111;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", var(--font-noto-kr), sans-serif;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  word-break: keep-all; /* 한국어 단어 중간에서 줄이 바뀌지 않도록 */
+}
+
+/* ---------- 글래스(반투명 유리) 효과 ---------- */
+
+.glass-bar {
+  background: rgba(245, 245, 247, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+/* 글 상세 대표 사진 위의 메뉴바. 글씨가 들어간 썸네일(책 표지 등)에서도 깔끔하도록 불투명하게 */
+.glass-overlay {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.glass-light {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.glass-dark {
+  background: rgba(20, 28, 38, 0.38);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.glass-chip {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+/* 글 상세의 제목 카드. 메뉴바와 같은 이유로 불투명도를 높게 */
+.glass-title {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: saturate(180%) blur(30px);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- 마우스를 올렸을 때 효과 ---------- */
+
+.art {
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.shade {
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.4s ease;
+}
+.tile:hover .art { transform: scale(1.04); }
+.tile:hover .shade { background: rgba(0, 0, 0, 0.14); }
+.tile .pill { transition: background 0.3s ease; }
+.tile:hover .pill { background: #e8e8ed; }
+
+.card {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.45s ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.12);
+}
+.card:hover .art { transform: scale(1.06); }
+.card:hover .shade { background: rgba(0, 0, 0, 0.08); }
+
+.nav-link { transition: opacity 0.2s ease; }
+.nav-link:hover { opacity: 1; }
+
+.icon-btn { transition: background 0.25s ease, transform 0.25s ease; }
+.icon-btn:hover { background: rgba(255, 255, 255, 0.95); transform: scale(1.06); }
+.bar-btn { transition: background 0.25s ease; }
+.bar-btn:hover { background: rgba(0, 0, 0, 0.06); }
+
+/* 키보드로 이동할 때 보이는 테두리 */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+.card:focus-visible,
+.tile:focus-visible {
+  outline-offset: 4px;
+}
+
+/* ---------- 전환 효과 ---------- */
+
+/* 홈의 카테고리 필터, 카테고리 페이지의 정렬을 바꿀 때 */
+.fade {
+  transition: opacity 0.28s ease, transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.28s ease;
+}
+.fade-out { opacity: 0; transform: translateY(-10px); filter: blur(6px); }
+.fade-pre { opacity: 0; transform: translateY(12px); filter: blur(6px); transition: none; }
+.fade-grid.fade-out { transform: translateY(-6px); filter: none; }
+.fade-grid.fade-pre { transform: translateY(16px); filter: none; }
+
+/* 카테고리 페이지에 들어올 때 */
+.page-enter {
+  animation: page-enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* 글 상세의 떠 있는 버튼 바 */
+.floating-bar {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(24px);
+  transition: opacity 0.35s ease, visibility 0.35s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.floating-bar.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+/* 움직임 줄이기를 켜둔 기기에서는 이동·확대 효과를 끕니다 */
+@media (prefers-reduced-motion: reduce) {
+  .art, .card, .fade, .floating-bar { transition: none; }
+  .tile:hover .art, .card:hover .art, .card:hover { transform: none; }
+  .fade-out, .fade-pre { transform: none; filter: none; }
+  .page-enter { animation: none; }
+  .floating-bar { transform: none; }
 }

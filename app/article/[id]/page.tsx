@@ -1,115 +1,69 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import ArticleHeader from "./ArticleHeader";
-import { getPublishedArticle, getAllBlocks } from "@/lib/notion";
+import SiteHeader from "../../components/SiteHeader";
+import SiteFooter from "../../components/SiteFooter";
+import NotionBlocks from "../../components/NotionBlocks";
+import Thumbnail from "../../components/Thumbnail";
+import { FloatingBar, ShareIconButton } from "../../components/ArticleActions";
+import { getPublishedArticle, getBlockTree } from "@/lib/notion";
+import { formatDate } from "@/lib/site";
 
-export default async function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
-  const pageId = resolvedParams.id;
+type Props = { params: Promise<{ id: string }> };
+
+// 검색엔진과 카카오톡·슬랙 공유 미리보기에 쓰이는 제목/요약/썸네일
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const article = await getPublishedArticle(id);
+  if (!article) return {};
+  return {
+    title: `${article.title} | TRAVESIA`,
+    description: article.summary || undefined,
+    openGraph: {
+      title: article.title,
+      description: article.summary || undefined,
+      images: article.thumbnail ? [article.thumbnail] : undefined,
+      type: "article",
+    },
+  };
+}
+
+export default async function ArticlePage({ params }: Props) {
+  const { id } = await params;
 
   // 공개 여부를 먼저 확인한 뒤 본문을 가져옵니다. (초안은 본문 요청 자체를 하지 않음)
-  const details = await getPublishedArticle(pageId);
-  if (!details) notFound();
+  const article = await getPublishedArticle(id);
+  if (!article) notFound();
 
-  const blocks = await getAllBlocks(pageId);
+  const blocks = await getBlockTree(id);
 
   return (
-    <div className="min-h-screen bg-[#FCFBF9] text-gray-900 font-sans pb-32">
-      
-      {/* 💡 기존의 딱딱했던 header를 지우고, 방금 만든 ArticleHeader로 교체했습니다. */}
-      <ArticleHeader />
+    <div className="min-h-screen bg-white text-[#1D1D1F]">
+      {/* 대표 사진 + 그 위에 떠 있는 메뉴바 */}
+      <div className="relative h-[420px] overflow-hidden bg-[#E8E8ED] md:h-[560px]">
+        <Thumbnail article={article} variant="hero" priority sizes="100vw" />
+        <SiteHeader overlay active={article.category} />
+      </div>
 
-      {/* 썸네일과 제목 (헤더 높이인 h-20만큼 마진을 주어 겹치지 않게 수정: mt-20) */}
-      <div className="w-full h-[60vh] relative mt-20 bg-gray-100">
-        {details.thumbnail && (
-          <img 
-            src={details.thumbnail} 
-            alt={details.title} 
-            className="w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-8 md:p-16">
-          <div className="max-w-4xl mx-auto w-full">
-            <span className="text-white/80 text-xs tracking-widest uppercase font-medium mb-4 block">
-              {details.category} • {details.date}
-            </span>
-            <h1 className="text-4xl md:text-6xl font-serif text-white leading-tight">
-              {details.title}
-            </h1>
-          </div>
+      {/* 제목 카드: 사진 아래쪽 경계에 걸쳐 놓고, 본문과 같은 폭·같은 왼쪽 선에 맞춥니다 */}
+      <div className="relative z-10 -mt-24 px-[22px] md:-mt-32">
+        <div className="glass-title relative mx-auto flex max-w-[900px] flex-col gap-3 rounded-3xl py-7 pl-7 pr-20 md:py-9 md:pl-10 md:pr-24">
+          <Link href={`/category/${article.category}`} className="self-start text-[15px] font-semibold text-[#0066CC] hover:underline">
+            {article.category}
+          </Link>
+          <h1 className="text-[30px] font-bold leading-[1.12] tracking-[-0.015em] md:text-5xl">{article.title}</h1>
+          <span className="text-sm text-[#424245]">{formatDate(article.date)}</span>
+          <ShareIconButton title={article.title} />
         </div>
       </div>
 
-      {/* 본문 텍스트 렌더링 영역 */}
-      <article className="max-w-3xl mx-auto mt-20 px-8 text-lg leading-relaxed text-gray-700 font-serif">
-        {blocks.map((block: any) => {
-          const type = block.type;
-          
-          if (type === 'paragraph') {
-            const text = block.paragraph.rich_text.map((t: any) => t.plain_text).join('');
-            if (!text) return <br key={block.id} />; 
-            return <p key={block.id} className="mb-6">{text}</p>;
-          }
-          
-          if (type === 'heading_1') {
-            const text = block.heading_1.rich_text.map((t: any) => t.plain_text).join('');
-            return <h1 key={block.id} className="text-4xl font-serif text-black mt-16 mb-8">{text}</h1>;
-          }
-          
-          if (type === 'heading_2') {
-            const text = block.heading_2.rich_text.map((t: any) => t.plain_text).join('');
-            return <h2 key={block.id} className="text-2xl font-serif text-black mt-12 mb-6">{text}</h2>;
-          }
-
-          if (type === 'heading_3') {
-            const text = block.heading_3.rich_text.map((t: any) => t.plain_text).join('');
-            return <h3 key={block.id} className="text-xl font-serif text-black mt-8 mb-4">{text}</h3>;
-          }
-          
-          // 1. 이미지 에러 방어막 추가
-          if (type === 'image') {
-            const url = block.image.type === 'external' ? block.image.external?.url : block.image.file?.url;
-            
-            // 💡 url이 비어있다면 에러를 내지 말고 조용히 넘어가기!
-            if (!url) return null; 
-
-            return <img key={block.id} src={url} alt="content image" className="w-full my-12 rounded-sm" />;
-          }
-
-          // 2. 구글 맵 (임베드, 북마크, 링크 미리보기 모두 커버)
-          if (type === 'embed' || type === 'bookmark' || type === 'link_preview') {
-            const blockData = block[type];
-            const url = blockData?.url;
-
-            if (!url) return null;
-            
-            // 💡 주소에 'google'과 'map'이 둘 다 있으면 무조건 지도로 렌더링
-            if (url.includes('google') && url.includes('map')) {
-              return (
-                <div key={block.id} className="w-full aspect-video my-12 rounded-sm overflow-hidden shadow-sm border border-gray-200/60">
-                  <iframe 
-                    src={url} 
-                    width="100%" 
-                    height="100%" 
-                    style={{ border: 0 }} 
-                    allowFullScreen 
-                    loading="lazy" 
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-              );
-            }
-            
-            // 지도가 아닌 일반 링크일 경우
-            return (
-              <a key={block.id} href={url} target="_blank" rel="noopener noreferrer" className="block my-6 p-4 border border-gray-200 hover:bg-gray-50 transition-colors text-sm text-gray-600 break-all rounded-sm">
-                🔗 {url}
-              </a>
-            );
-          }
-
-          return null; 
-        })}
+      {/* 본문 폭: 900px */}
+      <article className="mx-auto max-w-[944px] px-[22px] pb-10 pt-14 md:pt-16">
+        <NotionBlocks blocks={blocks} />
       </article>
+
+      <FloatingBar title={article.title} />
+      <SiteFooter />
     </div>
   );
 }

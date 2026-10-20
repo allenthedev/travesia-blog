@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- 노션 API 응답은 형태가 자유로워서 any로 다룹니다 */
 // 노션 API 호출을 한곳에 모아둔 모듈입니다.
 // 페이지마다 같은 fetch 코드를 복사하지 않고, 여기 함수만 가져다 씁니다.
 
@@ -11,6 +12,7 @@ export interface Article {
   date: string;
   summary: string;
   thumbnail: string; // 썸네일이 없으면 빈 문자열
+  featured: boolean; // 노션 '대표글' 체크박스 (없으면 false)
 }
 
 function notionHeaders() {
@@ -36,6 +38,7 @@ function toArticle(page: any): Article {
     date: props["작성일"]?.date?.start || "",
     summary: props["요약"]?.rich_text?.[0]?.plain_text || "",
     thumbnail: getFileUrl(props["썸네일"]?.files?.[0]),
+    featured: props["대표글"]?.checkbox === true,
   };
 }
 
@@ -123,5 +126,19 @@ export async function getAllBlocks(blockId: string): Promise<any[]> {
     cursor = data.has_more ? data.next_cursor : undefined;
   } while (cursor);
 
+  return blocks;
+}
+
+// 하위 블록이 있는 블록(토글, 중첩 목록, 콜아웃 등)은 children까지 채워서 돌려줍니다.
+// 노션 요청 제한(초당 약 3회)을 고려해 순서대로 가져오고, 깊이는 3단계까지만 내려갑니다.
+export async function getBlockTree(blockId: string, depth = 0): Promise<any[]> {
+  const blocks = await getAllBlocks(blockId);
+  if (depth >= 3) return blocks;
+
+  for (const block of blocks) {
+    if (block.has_children && block.type !== "child_page" && block.type !== "child_database") {
+      block.children = await getBlockTree(block.id, depth + 1);
+    }
+  }
   return blocks;
 }
